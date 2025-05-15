@@ -1230,6 +1230,19 @@ static void
 	}
 }
 
+// Give last position of a character
+char*
+    strrstr(const char* haystack, const char* needle)
+{
+	char* result = NULL;
+	char* p      = (char*) haystack;
+	while ((p = strstr(p, needle)) != NULL) {
+		result = p;
+		p++;
+	}
+	return result;
+}
+
 // Implementation of Qt4's QtHash, c.f., qhash @
 // https://github.com/kovidgoyal/calibre/blob/205754891e341e7f940e70057ac3a96a2443fdbd/src/calibre/devices/kobo/driver.py#L41-L59
 static unsigned int
@@ -1475,13 +1488,24 @@ static bool
 			//        c.f., https://github.com/kovidgoyal/calibre/pull/2687
 			if (thumbnails_count == 0U) {
 				char converted_book_path[sizeof(book_path)];
+				char prefix[sizeof(book_path)];
 				// No error checking, we've already validated that string's length in `watch_handler`
-				str5cpy(converted_book_path,
-					sizeof(converted_book_path),
-					book_path,
-					sizeof(book_path),
-					NOTRUNC);
-				replace_invalid_chars(converted_book_path);
+				size_t prefix_len = sizeof(book_path);
+				char*  last_dot   = strrstr(book_path, ".");
+				if (last_dot != NULL) {
+					prefix_len = last_dot - book_path;
+				}
+				strncpy(prefix, book_path, prefix_len);
+				prefix[prefix_len] = '\0';
+				replace_invalid_chars(prefix);
+				if (last_dot != NULL) {
+					const char* suffix = last_dot + 1;
+					snprintf(
+					    converted_book_path, sizeof(converted_book_path), "%s.%s", prefix, suffix);
+				} else {
+					strncpy(converted_book_path, prefix, sizeof(prefix));
+				}
+
 				ret = snprintf(thumbnail_path,
 					       sizeof(thumbnail_path),
 					       "%s/.kobo-images/%s",
