@@ -1488,7 +1488,6 @@ static bool
 					db_version = sqlite3_column_int(stmt, 0);
 					DBGLOG("Database version: %d", db_version);
 				}
-				sqlite3_finalize(stmt);
 
 				if (db_version >= 191) {
 					// Implement the 5.6 variant, which preserves the dot for the file extension
